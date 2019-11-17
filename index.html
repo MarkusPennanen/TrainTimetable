@@ -1,0 +1,171 @@
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Juna-aikataulu</title>
+  <link rel="stylesheet" type="text/css" href="traffic.css">
+
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="apple-touch-icon" href="icon.png">
+  <!-- Place favicon.ico in the root directory -->
+
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+
+  <meta name="theme-color" content="#fafafa">
+</head>
+
+<body onload="metaData()">
+  <!--[if IE]>
+    <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+  <![endif]-->
+
+  <div id ="searchDisplay">
+  <h1>Juna-aikataulu</h1>
+  <h2>Hae juna-asema</h2>
+  <input id="inputStr" type="text" list="datalist" onkeyup="autoCompleter(this.value)" onclick="hideError()">
+
+  <ul id="datalist">
+  </ul>
+    <h3 id="errorTxt">Virheellinen haku</h3>
+    </div>
+
+    <div id="scheduleDisplay">
+      <button id = "returnButton" onclick="returnFunction()" style="vertical-allign:middle"><span>Vaihda asema</span></button>
+      <table id="scheduleTable">
+      </table>
+
+    </div>
+
+
+<script>
+var metaDataF;
+var stationArray = [];
+
+function metaData() {
+  var url = "https://rata.digitraffic.fi/api/v1/metadata/stations";
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("GET",url, true);
+  xmlhttp.send();
+
+  xmlhttp.onreadystatechange = function() {
+    var correctTimeTable;
+    if (xmlhttp.readyState==4 && xmlhttp.status==200){
+      metaDataF = JSON.parse(xmlhttp.responseText);
+      var datalistItems = "";
+      console.log(metaDataF)
+      for (var i = 0; i < metaDataF.length; i++) {
+        var nameInput = metaDataF[i].stationName;
+        stationArray[i] = nameInput;
+        datalistItems += "<li onclick='getData(this)'>"+nameInput+"</li>"
+      }
+      document.getElementById("datalist").innerHTML = datalistItems;
+    }
+  }
+}
+
+function hideError() {
+  document.getElementById("errorTxt").style.display = "none";
+}
+function returnFunction() {
+    document.getElementById("searchDisplay").style.display = "block";
+    document.getElementById("scheduleDisplay").style.display = "none";
+}
+document.getElementById("scheduleDisplay").style.display = "none";
+document.getElementById("errorTxt").style.display = "none";
+
+
+
+
+  function autoCompleter(value) { //Function for autocompliting search inputs, function receives the value of the text written in the input
+    var totalStations = metaDataF.length; //Amount of total stations
+    document.getElementById('datalist').innerHTML = ''; //Empty suggestion list to prevent same station name to be displayed multiple times on the list and remove station names that don't match
+    var inputLength = value.length; //Length of the inputted characters
+      for (var i = 0; i < totalStations; i++) { //Go through all station names
+          if(((stationArray[i].toLowerCase()).indexOf(value.toLowerCase()))>-1) //Check if the given characters in the same order exist in any station name
+            {
+              var node = document.createElement("li"); //Create element for the suggested station name
+              var nameMatch = document.createTextNode(stationArray[i]); //Create text node for matching station name
+              node.appendChild(nameMatch); //Add the matching station name onto the node
+              node.setAttribute("onclick", "getData(this)")
+              document.getElementById("datalist").appendChild(node); //Add the node onto the datalist
+            }
+          }
+        }
+
+
+
+  function getData(stationClick) {
+
+    var selectedStation = stationClick.innerHTML;
+    var stationShort;
+    var fullResponse;
+    var nameSet = false;
+    if (selectedStation == "") {
+      document.getElementById("errorTxt").style.display = "block";
+    } else {
+
+    for (var i = 0; i < metaDataF.length; i++) { console.log(selectedStation)
+        if (metaDataF[i].stationName.toLowerCase() == selectedStation.toLowerCase()) {
+          stationShort = metaDataF[i].stationShortCode;
+          console.log(stationShort)
+        }
+      }
+
+    var url = "https://rata.digitraffic.fi/api/v1/live-trains?arrived_trains=0&arriving_trains=0&departed_trains=0&departing_trains=30&station="+stationShort;
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET",url, true);
+    xmlhttp.send();
+
+    xmlhttp.onreadystatechange = function() {
+      var correctTimeTable;
+      if (xmlhttp.readyState==4 && xmlhttp.status==200){
+        document.getElementById("searchDisplay").style.display = "none";
+        document.getElementById("scheduleDisplay").style.display = "block";
+        var jsonObj = JSON.parse(xmlhttp.responseText);
+        var scheduleInput = "<tr><th>Juna</th><th>Lähtöaika</th><th>Raide</th><th>Pääteasema</th>";
+        for (var i = 0; i < jsonObj.length; i++) {
+          for (y = 0; y < jsonObj[i].timeTableRows.length; y++) {
+            if (jsonObj[i].timeTableRows[y].stationShortCode == stationShort && jsonObj[i].timeTableRows[y].type == "DEPARTURE") {
+              correctTimeTable = jsonObj[i].timeTableRows[y];
+            }
+          }
+          var commuterID = jsonObj[i].commuterLineID;
+          if (commuterID == "") {
+            commuterID = jsonObj[i].trainType + jsonObj[i].trainNumber;
+          }
+          var stationsTotal = jsonObj[i].timeTableRows.length - 1;
+          var finalStop = jsonObj[i].timeTableRows[stationsTotal].stationShortCode;
+          var trainEstimate = new Date(correctTimeTable.scheduledTime)
+          var hour = trainEstimate.getHours()
+          var minute = trainEstimate.getMinutes()
+          if (minute < 10) {
+            minute = '0' + minute;
+          }
+        scheduleInput += "<tr><td>"+commuterID+"</td>"
+        scheduleInput += "<td>"+hour+"."+minute+"</td>"
+        scheduleInput += "<td>"+correctTimeTable.commercialTrack+"</td>"
+        scheduleInput += "<td>"+finalStop+"</td>"
+        scheduleInput += "</tr>"
+      }
+        document.getElementById("scheduleTable").innerHTML = scheduleInput;
+
+    }
+  }
+}
+}
+
+
+</script>
+<!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
+<script>
+  window.ga = function () { ga.q.push(arguments) }; ga.q = []; ga.l = +new Date;
+  ga('create', 'UA-XXXXX-Y', 'auto'); ga('set','transport','beacon'); ga('send', 'pageview')
+</script>
+<script src="https://www.google-analytics.com/analytics.js" async></script>
+</body>
+</html>
