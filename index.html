@@ -109,10 +109,9 @@ document.getElementById("errorTxt").style.display = "none";
       document.getElementById("errorTxt").style.display = "block";
     } else {
 
-    for (var i = 0; i < metaDataF.length; i++) { console.log(selectedStation)
+    for (var i = 0; i < metaDataF.length; i++) {
         if (metaDataF[i].stationName.toLowerCase() == selectedStation.toLowerCase()) {
           stationShort = metaDataF[i].stationShortCode;
-          console.log(stationShort)
         }
       }
 
@@ -138,18 +137,26 @@ document.getElementById("errorTxt").style.display = "none";
           if (commuterID == "") {
             commuterID = jsonObj[i].trainType + jsonObj[i].trainNumber;
           }
+
           var stationsTotal = jsonObj[i].timeTableRows.length - 1;
-          var finalStop = jsonObj[i].timeTableRows[stationsTotal].stationShortCode;
           var trainEstimate = new Date(correctTimeTable.scheduledTime)
+          var finalStop = jsonObj[i].timeTableRows[stationsTotal].stationShortCode;
           var hour = trainEstimate.getHours()
           var minute = trainEstimate.getMinutes()
+          var finalStationName;
           if (minute < 10) {
             minute = '0' + minute;
           }
+          for (var x = 0; x < metaDataF.length; x++) {
+              if (metaDataF[x].stationShortCode.toLowerCase() == finalStop.toLowerCase()) {
+                finalStationName = metaDataF[x].stationName;
+                console.log(finalStationName)
+              }
+            }
         scheduleInput += "<tr><td>"+commuterID+"</td>"
         scheduleInput += "<td>"+hour+"."+minute+"</td>"
         scheduleInput += "<td>"+correctTimeTable.commercialTrack+"</td>"
-        scheduleInput += "<td>"+finalStop+"</td>"
+        scheduleInput += "<td>"+finalStationName+"</td>"
         scheduleInput += "</tr>"
       }
         document.getElementById("scheduleTable").innerHTML = scheduleInput;
