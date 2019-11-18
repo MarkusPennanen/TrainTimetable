@@ -31,7 +31,6 @@
 
   <ul id="datalist">
   </ul>
-    <h3 id="errorTxt">Virheellinen haku</h3>
     </div>
 
     <div id="scheduleDisplay">
@@ -68,18 +67,12 @@ function metaData() {
   }
 }
 
-function hideError() {
-  document.getElementById("errorTxt").style.display = "none";
-}
 function returnFunction() {
     document.getElementById("searchDisplay").style.display = "block";
     document.getElementById("scheduleDisplay").style.display = "none";
 }
 document.getElementById("scheduleDisplay").style.display = "none";
 document.getElementById("errorTxt").style.display = "none";
-
-
-
 
   function autoCompleter(value) { //Function for autocompliting search inputs, function receives the value of the text written in the input
     var totalStations = metaDataF.length; //Amount of total stations
@@ -97,17 +90,12 @@ document.getElementById("errorTxt").style.display = "none";
           }
         }
 
-
-
   function getData(stationClick) {
 
     var selectedStation = stationClick.innerHTML;
     var stationShort;
     var fullResponse;
     var nameSet = false;
-    if (selectedStation == "") {
-      document.getElementById("errorTxt").style.display = "block";
-    } else {
 
     for (var i = 0; i < metaDataF.length; i++) {
         if (metaDataF[i].stationName.toLowerCase() == selectedStation.toLowerCase()) {
@@ -164,7 +152,7 @@ document.getElementById("errorTxt").style.display = "none";
     }
   }
 }
-}
+
 
 
 </script>
