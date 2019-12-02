@@ -3,6 +3,9 @@
 body {
   background-image: url("station.jpg");
   padding-left: 1%;
+  padding-right: 1%;
+  padding-top: 1%;
+  padding-bottom: 1%;
 }
 
 #scheduleTable {
