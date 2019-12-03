@@ -67,6 +67,7 @@ function metaData() { //Get the metadata from digitraffic which has all the poss
 function returnFunction() { //Function for when the return button is pressed it hides the schedule and shows the search display again
     document.getElementById("searchDisplay").style.display = "block";
     document.getElementById("scheduleDisplay").style.display = "none";
+    document.getElementById("inputStr").value = ""; //Clear search
 }
 
 document.getElementById("scheduleDisplay").style.display = "none";
